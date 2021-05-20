@@ -217,7 +217,45 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        def expectimax(agent, depth, gameState):
+            if depth == self.depth or gameState.isWin() or gameState.isLose():
+                return self.evaluationFunction(gameState)
+
+            elif agent == 0:
+                return max_value(agent, depth, gameState)
+
+            else:
+                return exp_value(agent, depth, gameState)
+
+        def max_value(agent, depth, gameState):
+            children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
+            miniMaxOfChildren = [expectimax(1, depth, child) for child in children]
+            maxVal = max(miniMaxOfChildren)
+            return maxVal
+
+        def exp_value(agent, depth, gameState):
+            agentNext = agent + 1
+
+            if gameState.getNumAgents() == agentNext:
+                agentNext = 0
+                depth += 1
+
+            successorsOfDirections = [gameState.generateSuccessor(agent, dir) for dir in gameState.getLegalActions(agent)]
+            expectiMaxOfDirections = [expectimax(agentNext, depth, successor) for successor in successorsOfDirections]
+            sumOfExpectimax = sum(expectiMaxOfDirections)
+
+            average = sumOfExpectimax / len(gameState.getLegalActions(agent))
+
+            return average
+
+        pacmanDirections = gameState.getLegalActions(0)
+        miniMaxPacmanDirections = [expectimax(1, 0, gameState.generateSuccessor(0, step)) for step in pacmanDirections]
+        total = max(miniMaxPacmanDirections)
+        indexOfMax = miniMaxPacmanDirections.index(total)
+        direction = pacmanDirections[indexOfMax]
+
+        return direction
 
 
 def betterEvaluationFunction(currentGameState):
