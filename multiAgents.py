@@ -241,7 +241,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
                 agentNext = 0
                 depth += 1
 
-            successorsOfDirections = [gameState.generateSuccessor(agent, dir) for dir in gameState.getLegalActions(agent)]
+            successorsOfDirections = [gameState.generateSuccessor(agent, dir) for dir in
+                                      gameState.getLegalActions(agent)]
             expectiMaxOfDirections = [expectimax(agentNext, depth, successor) for successor in successorsOfDirections]
             sumOfExpectimax = sum(expectiMaxOfDirections)
 
@@ -266,7 +267,24 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood().asList()
+    newGhostStates = currentGameState.getGhostStates()
+
+    distanceFoods = [util.manhattanDistance(newPos, food) for food in newFood]
+    minDistanceFood = min(distanceFoods, default=1)
+
+    ghostDistances = [util.manhattanDistance(ghost.getPosition(), newPos) for ghost in newGhostStates]
+
+    for i in range(len(ghostDistances)):
+        if ghostDistances[i] == 0 and newGhostStates[i].scaredTimer == 0:
+            return -float('inf')
+        if ghostDistances[i] == 1 and newGhostStates[i].scaredTimer == 0:
+            minDistanceFood -= 1000
+        if ghostDistances[i] < newGhostStates[i].scaredTimer:
+            minDistanceFood += 500
+
+    return currentGameState.getScore() + 1.0 / minDistanceFood
 
 
 # Abbreviation
