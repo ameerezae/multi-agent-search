@@ -130,6 +130,36 @@ class MinimaxAgent(MultiAgentSearchAgent):
     Your minimax agent (question 2)
     """
 
+    def minimax(self, agent, depth, gameState):
+
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        elif agent == 0:
+            return self.max_value(agent, depth, gameState)
+
+        elif agent > 0:
+            return self.min_value(agent, depth, gameState)
+
+    def min_value(self, agent, depth, gameState):
+        agentnext = agent + 1
+
+        if gameState.getNumAgents() == agentnext:
+            agentnext = 0
+            depth += 1
+
+        children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
+        miniMaxOfChildren = [self.minimax(agentnext, depth, child) for child in children]
+        minVal = min(miniMaxOfChildren)
+
+        return minVal
+
+    def max_value(self, agent, depth, gameState):
+        children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
+        miniMaxOfChildren = [self.minimax(1, depth, child) for child in children]
+        maxVal = max(miniMaxOfChildren)
+        return maxVal
+
     def getAction(self, gameState):
         """
         Returns the minimax action from the current gameState using self.depth
@@ -153,38 +183,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
 
-        def minimax(agent, depth, gameState):
-
-            if depth == self.depth or gameState.isWin() or gameState.isLose():
-                return self.evaluationFunction(gameState)
-
-            elif agent == 0:
-                return max_value(agent, depth, gameState)
-
-            elif agent > 0:
-                return min_value(agent, depth, gameState)
-
-        def min_value(agent, depth, gameState):
-            agentnext = agent + 1
-
-            if gameState.getNumAgents() == agentnext:
-                agentnext = 0
-                depth += 1
-
-            children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
-            miniMaxOfChildren = [minimax(agentnext, depth, child) for child in children]
-            minVal = min(miniMaxOfChildren)
-
-            return minVal
-
-        def max_value(agent, depth, gameState):
-            children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
-            miniMaxOfChildren = [minimax(1, depth, child) for child in children]
-            maxVal = max(miniMaxOfChildren)
-            return maxVal
-
         pacmanDirections = gameState.getLegalActions(0)
-        miniMaxPacmanDirections = [minimax(1, 0, gameState.generateSuccessor(0, step)) for step in pacmanDirections]
+        miniMaxPacmanDirections = [self.minimax(1, 0, gameState.generateSuccessor(0, step)) for step in
+                                   pacmanDirections]
         total = max(miniMaxPacmanDirections)
         indexOfMax = miniMaxPacmanDirections.index(total)
         direction = pacmanDirections[indexOfMax]
@@ -197,17 +198,111 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def alpha_beta(self, agent, depth, gameState, alpha, beta):
+
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        elif agent == 0:
+            return self.max_value(agent, depth, gameState, alpha, beta)
+
+        else:
+            return self.min_value(agent, depth, gameState, alpha, beta)
+
+    def max_value(self, agent, depth, gameState, alpha, beta):
+        maxVal = -float('inf')
+
+        for direction in gameState.getLegalActions(agent):
+            successor = gameState.generateSuccessor(agent, direction)
+            abp = self.alpha_beta(1, depth, successor, alpha, beta)
+            if abp > maxVal:
+                maxVal = abp
+            if maxVal > beta:
+                return maxVal
+            if maxVal > alpha:
+                alpha = maxVal
+
+        return maxVal
+
+    def min_value(self, agent, depth, gameState, alpha, beta):
+        minVal = float('inf')
+        agentNext = agent + 1
+
+        if gameState.getNumAgents() == agentNext:
+            agentNext = 0
+            depth += 1
+
+        for direction in gameState.getLegalActions(agent):
+            successor = gameState.generateSuccessor(agent, direction)
+            abp = self.alpha_beta(agentNext, depth, successor, alpha, beta)
+            if abp < minVal:
+                minVal = abp
+            if minVal < alpha:
+                return minVal
+            if minVal < beta:
+                beta = minVal
+
+        return minVal
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        total = -float('inf')
+        pacmanDirection = gameState.getLegalActions(0)
+        direction = None
+        alpha = -float('inf')
+        beta = float('inf')
+        for step in pacmanDirection:
+            utilStep = self.alpha_beta(1, 0, gameState.generateSuccessor(0, step), alpha, beta)
+
+            if utilStep > total:
+                total = utilStep
+                direction = step
+            if total > alpha:
+                alpha = total
+
+        return direction
+
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
+
+    def expectimax(self, agent, depth, gameState):
+        if depth == self.depth or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+
+        elif agent == 0:
+            return self.max_value(agent, depth, gameState)
+
+        else:
+            return self.exp_value(agent, depth, gameState)
+
+    def max_value(self, agent, depth, gameState):
+        children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
+        miniMaxOfChildren = [self.expectimax(1, depth, child) for child in children]
+        maxVal = max(miniMaxOfChildren)
+        return maxVal
+
+    def exp_value(self, agent, depth, gameState):
+        agentNext = agent + 1
+
+        if gameState.getNumAgents() == agentNext:
+            agentNext = 0
+            depth += 1
+
+        successorsOfDirections = [gameState.generateSuccessor(agent, dir) for dir in
+                                  gameState.getLegalActions(agent)]
+        expectiMaxOfDirections = [self.expectimax(agentNext, depth, successor) for successor in successorsOfDirections]
+        sumOfExpectimax = sum(expectiMaxOfDirections)
+
+        average = sumOfExpectimax / len(gameState.getLegalActions(agent))
+
+        return average
 
     def getAction(self, gameState):
         """
@@ -217,41 +312,9 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-
-        def expectimax(agent, depth, gameState):
-            if depth == self.depth or gameState.isWin() or gameState.isLose():
-                return self.evaluationFunction(gameState)
-
-            elif agent == 0:
-                return max_value(agent, depth, gameState)
-
-            else:
-                return exp_value(agent, depth, gameState)
-
-        def max_value(agent, depth, gameState):
-            children = [gameState.generateSuccessor(agent, direction) for direction in gameState.getLegalActions(agent)]
-            miniMaxOfChildren = [expectimax(1, depth, child) for child in children]
-            maxVal = max(miniMaxOfChildren)
-            return maxVal
-
-        def exp_value(agent, depth, gameState):
-            agentNext = agent + 1
-
-            if gameState.getNumAgents() == agentNext:
-                agentNext = 0
-                depth += 1
-
-            successorsOfDirections = [gameState.generateSuccessor(agent, dir) for dir in
-                                      gameState.getLegalActions(agent)]
-            expectiMaxOfDirections = [expectimax(agentNext, depth, successor) for successor in successorsOfDirections]
-            sumOfExpectimax = sum(expectiMaxOfDirections)
-
-            average = sumOfExpectimax / len(gameState.getLegalActions(agent))
-
-            return average
-
         pacmanDirections = gameState.getLegalActions(0)
-        miniMaxPacmanDirections = [expectimax(1, 0, gameState.generateSuccessor(0, step)) for step in pacmanDirections]
+        miniMaxPacmanDirections = [self.expectimax(1, 0, gameState.generateSuccessor(0, step)) for step in
+                                   pacmanDirections]
         total = max(miniMaxPacmanDirections)
         indexOfMax = miniMaxPacmanDirections.index(total)
         direction = pacmanDirections[indexOfMax]
