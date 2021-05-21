@@ -80,10 +80,9 @@ class ReflexAgent(Agent):
             if util.manhattanDistance(newPos, ghostState.getPosition()) <= 1:
                 return -1
 
+        isFood = 0
         if newPos in currentGameState.getFood().asList():
-            isFood = 1.0
-        else:
-            isFood = 0.0
+            isFood = 1
 
         newFoodList = newFood.asList()
         manhattanFoodDistance = [util.manhattanDistance(newPos, foodPos) for foodPos in newFoodList]
